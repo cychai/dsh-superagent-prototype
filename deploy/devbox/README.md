@@ -11,6 +11,11 @@ units, adjusting `WorkingDirectory` if the checkout is not at
 `deploy-devbox.sh` every ten minutes. The script serializes runs, refuses dirty or
 diverged checkouts, and never force-pushes or resolves merge conflicts.
 
+The installed service fetches from `/home/chaichunyan/dsh-superagent-sync.git`,
+a bare mirror fed by the Mac tunnel agent. This avoids depending on outbound
+GitHub access from the private Devbox. Set `DSH_SUPERAGENT_FETCH_SOURCE=origin`
+when the Devbox has direct GitHub access.
+
 The deploy-specific `Dockerfile`, `compose.yml`, and persistent `data/` directory
 remain on the Devbox host and are intentionally not part of this prototype fork.
 The host deployment script writes `superagent-src/.source-commit` for the image

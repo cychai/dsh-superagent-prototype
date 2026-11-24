@@ -6,5 +6,6 @@ Wants=network-online.target
 [Service]
 Type=oneshot
 WorkingDirectory=/home/chaichunyan/dsh-superagent/superagent-src
+Environment=DSH_SUPERAGENT_FETCH_SOURCE=/home/chaichunyan/dsh-superagent-sync.git
 ExecStart=/home/chaichunyan/dsh-superagent/superagent-src/deploy/devbox/deploy-devbox.sh
 TimeoutStartSec=45min

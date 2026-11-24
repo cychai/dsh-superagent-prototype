@@ -7,6 +7,7 @@ branch="${DSH_SUPERAGENT_BRANCH:-main}"
 health_timeout="${DSH_SUPERAGENT_HEALTH_TIMEOUT:-180}"
 lock_file="${DSH_SUPERAGENT_UPDATE_LOCK:-/tmp/dsh-superagent-update.lock}"
 fetch_timeout="${DSH_SUPERAGENT_FETCH_TIMEOUT:-120}"
+fetch_source="${DSH_SUPERAGENT_FETCH_SOURCE:-origin}"
 
 exec 9>"$lock_file"
 if ! flock -n 9; then
@@ -21,12 +22,12 @@ if [ -n "$(git -C "$repo_dir" status --porcelain --untracked-files=normal -- . '
   exit 1
 fi
 
-if ! timeout "$fetch_timeout" git -C "$repo_dir" fetch --prune origin "$branch"; then
-  echo "Unable to fetch origin/$branch within ${fetch_timeout}s; leaving the running deployment unchanged." >&2
+if ! timeout "$fetch_timeout" git -C "$repo_dir" fetch --prune "$fetch_source" "$branch"; then
+  echo "Unable to fetch $fetch_source/$branch within ${fetch_timeout}s; leaving the running deployment unchanged." >&2
   exit 1
 fi
 current_commit="$(git -C "$repo_dir" rev-parse HEAD)"
-target_commit="$(git -C "$repo_dir" rev-parse "origin/$branch")"
+target_commit="$(git -C "$repo_dir" rev-parse FETCH_HEAD)"
 
 if [ "$current_commit" = "$target_commit" ]; then
   echo "Already deployed $target_commit."
@@ -97,7 +98,7 @@ deadline=$(( $(date +%s) + health_timeout ))
 while [ "$(date +%s)" -lt "$deadline" ]; do
   health="$(sudo -n docker inspect dsh-superagent --format '{{if .State.Health}}{{.State.Health.Status}}{{else}}{{.State.Status}}{{end}}' 2>/dev/null || true)"
   if [ "$health" = healthy ]; then
-    git -C "$repo_dir" merge --ff-only "origin/$branch"
+    git -C "$repo_dir" merge --ff-only "$target_commit"
     printf '%s\n' "$target_commit" >"$repo_dir/.source-commit"
     printf '%s\n' "$target_commit" >"$deploy_dir/.deployed-commit"
     echo "Deployed $target_commit as $candidate_image."
