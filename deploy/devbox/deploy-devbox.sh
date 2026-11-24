@@ -6,6 +6,7 @@ deploy_dir="${DSH_SUPERAGENT_DEPLOY_DIR:-/home/chaichunyan/dsh-superagent}"
 branch="${DSH_SUPERAGENT_BRANCH:-main}"
 health_timeout="${DSH_SUPERAGENT_HEALTH_TIMEOUT:-180}"
 lock_file="${DSH_SUPERAGENT_UPDATE_LOCK:-/tmp/dsh-superagent-update.lock}"
+fetch_timeout="${DSH_SUPERAGENT_FETCH_TIMEOUT:-120}"
 
 exec 9>"$lock_file"
 if ! flock -n 9; then
@@ -20,7 +21,10 @@ if [ -n "$(git -C "$repo_dir" status --porcelain --untracked-files=normal -- . '
   exit 1
 fi
 
-git -C "$repo_dir" fetch --prune origin "$branch"
+if ! timeout "$fetch_timeout" git -C "$repo_dir" fetch --prune origin "$branch"; then
+  echo "Unable to fetch origin/$branch within ${fetch_timeout}s; leaving the running deployment unchanged." >&2
+  exit 1
+fi
 current_commit="$(git -C "$repo_dir" rev-parse HEAD)"
 target_commit="$(git -C "$repo_dir" rev-parse "origin/$branch")"
 

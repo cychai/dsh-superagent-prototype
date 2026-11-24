@@ -16,7 +16,8 @@ remain on the Devbox host and are intentionally not part of this prototype fork.
 The host deployment script writes `superagent-src/.source-commit` for the image
 build, updates the Compose image tag, retains the previous image as a rollback
 tag, and restores the previous checkout and container if health does not become
-healthy.
+healthy. A failed or timed-out GitHub fetch leaves the current deployment
+untouched and is retried by the next timer run.
 
 Useful commands:
 
