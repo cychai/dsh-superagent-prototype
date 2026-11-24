@@ -28,8 +28,9 @@ if ! timeout "$fetch_timeout" git -C "$repo_dir" fetch --prune "$fetch_source" "
 fi
 current_commit="$(git -C "$repo_dir" rev-parse HEAD)"
 target_commit="$(git -C "$repo_dir" rev-parse FETCH_HEAD)"
+deployed_commit="$(cat "$deploy_dir/.deployed-commit" 2>/dev/null || true)"
 
-if [ "$current_commit" = "$target_commit" ]; then
+if [ "$current_commit" = "$target_commit" ] && [ "$deployed_commit" = "$target_commit" ]; then
   echo "Already deployed $target_commit."
   exit 0
 fi
@@ -39,7 +40,7 @@ if [ "$(git -C "$repo_dir" symbolic-ref --quiet --short HEAD || true)" != "$bran
   exit 1
 fi
 
-if ! git -C "$repo_dir" merge-base --is-ancestor "$current_commit" "$target_commit"; then
+if [ "$current_commit" != "$target_commit" ] && ! git -C "$repo_dir" merge-base --is-ancestor "$current_commit" "$target_commit"; then
   echo "Refusing non-fast-forward deployment: $current_commit -> $target_commit" >&2
   exit 1
 fi
