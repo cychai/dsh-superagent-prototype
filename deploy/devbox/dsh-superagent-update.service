@@ -1,0 +1,10 @@
+[Unit]
+Description=Update dsh-superagent from the fork
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+WorkingDirectory=/home/chaichunyan/dsh-superagent/superagent-src
+ExecStart=/home/chaichunyan/dsh-superagent/superagent-src/deploy/devbox/deploy-devbox.sh
+TimeoutStartSec=45min
